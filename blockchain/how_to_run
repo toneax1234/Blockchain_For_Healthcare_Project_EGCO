@@ -1,0 +1,238 @@
+//makes file can excetable
+
+chmod +x ./scripts/*
+
+
+
+
+// 1. run Fabric CA 
+
+docker-compose -f docker-compose-ca.yaml up
+
+// 2. move in to ca-client and generate certs
+
+docker exec -it ca-client bash
+
+docker exec ca-clinet bash -c 'cd ./scripts && ./gen-certs.sh'
+
+
+./gen-certs.sh
+
+docker exec ca-clinet bash -c 'cd ./scripts && ./gen-certs.sh'
+docker cp ca-client:etc/hyperledger/fabric-ca-client/scripts/crypto-config ./crypto-config
+
+3. create genesis block
+
+docker exec ca-client bash -c 'cd ./scripts && ./gen-certs.sh'
+
+docker cp ca-client:etc/hyperledger/fabric-ca-client/scripts/crypto-config ./crypto-config
+
+../bin/exe/configtxgen -profile OrdererGenesis -channelID syschannel -outputBlock ./orderer/genesis.block 
+
+../bin/exe/configtxgen -profile MainChannel -outputCreateChannelTx ./channels/mainchannel.tx -channelID mainchannel 
+
+../bin/exe/configtxgen -profile MainChannel -outputAnchorPeersUpdate ./channels/org1-anchors.tx -channelID mainchannel -asOrg org1 
+
+../bin/exe/configtxgen -profile MainChannel -outputAnchorPeersUpdate ./channels/org2-anchors.tx -channelID mainchannel -asOrg org2
+
+docker-compose up
+
+
+../bin/exe/configtxgen -profile MainChannel -outputAnchorPeersUpdate ./channels/org3-anchors.tx -channelID mainchannel -asOrg org3
+
+
+4.create channel
+
+docker exec cli-peer0-org1 bash -c 'peer channel create -c mainchannel -f ./channels/mainchannel.tx -o orderer0-service:7050 --tls --cafile=/etc/hyperledger/orderers/msp/tlscacerts/ca-root-7054.pem'
+docker exec cli-peer0-org1 bash -c 'peer channel join -b mainchannel.block' 
+docker exec cli-peer0-org1 bash -c 'cp mainchannel.block ./channels/mainchannel.block' 
+docker exec cli-peer1-org1 bash -c 'peer channel join -b ./channels/mainchannel.block' 
+docker exec cli-peer0-org2 bash -c 'peer channel join -b ./channels/mainchannel.block' 
+docker exec cli-peer1-org2 bash -c 'peer channel join -b ./channels/mainchannel.block'
+docker exec cli-peer0-org1 bash -c 'peer channel update -o orderer0-service:7050 --tls --cafile=/etc/hyperledger/orderers/msp/tlscacerts/ca-root-7054.pem -c mainchannel -f ./channels/org1-anchors.tx' 
+docker exec cli-peer0-org2 bash -c 'peer channel update -o orderer0-service:7050 --tls --cafile=/etc/hyperledger/orderers/msp/tlscacerts/ca-root-7054.pem -c mainchannel -f ./channels/org2-anchors.tx'
+
+
+docker exec cli-peer0-org1 bash -c 'peer chaincode install -p rawresources -n rawresources -v 0' 
+docker exec cli-peer1-org1 bash -c 'peer chaincode install -p rawresources -n rawresources -v 0' 
+docker exec cli-peer0-org2 bash -c 'peer chaincode install -p rawresources -n rawresources -v 0' 
+docker exec cli-peer1-org2 bash -c 'peer chaincode install -p rawresources -n rawresources -v 0'
+docker exec cli-peer0-org1 bash -c "peer chaincode instantiate -C mainchannel -n rawresources -v 0 -c '{\"Args\":[]}' -o orderer0-service:7050 --tls --cafile=/etc/hyperledger/orderers/msp/tlscacerts/ca-root-7054.pem"
+
+docker exec cli-peer0-org3 bash -c 'peer channel join -b ./channels/mainchannel.block'
+docker exec cli-peer1-org3 bash -c 'peer channel join -b ./channels/mainchannel.block'
+
+5.anchor
+
+docker exec cli-peer0-org1 bash -c 'peer channel update -o orderer0-service:7050 --tls --cafile=/etc/hyperledger/orderers/msp/tlscacerts/ca-root-7054.pem -c mainchannel -f ./channels/org1-anchors.tx' 
+docker exec cli-peer0-org2 bash -c 'peer channel update -o orderer0-service:7050 --tls --cafile=/etc/hyperledger/orderers/msp/tlscacerts/ca-root-7054.pem -c mainchannel -f ./channels/org2-anchors.tx'
+docker exec cli-peer0-org3 bash -c 'peer channel update -o orderer0-service:7050 --tls --cafile=/etc/hyperledger/orderers/msp/tlscacerts/ca-root-7054.pem -c mainchannel -f ./channels/org3-anchors.tx'
+
+6.install chaincode
+
+docker exec cli-peer0-org1 bash -c 'peer chaincode install -p rawresources -n rawresources -v 0' 
+docker exec cli-peer1-org1 bash -c 'peer chaincode install -p rawresources -n rawresources -v 0' 
+docker exec cli-peer0-org2 bash -c 'peer chaincode install -p rawresources -n rawresources -v 0' 
+docker exec cli-peer1-org2 bash -c 'peer chaincode install -p rawresources -n rawresources -v 0'
+docker exec cli-peer0-org3 bash -c 'peer chaincode install -p rawresources -n rawresources -v 0' 
+docker exec cli-peer1-org3 bash -c 'peer chaincode install -p rawresources -n rawresources -v 0'
+
+7.instanitate chaincode
+
+docker exec cli-peer0-org1 bash -c "peer chaincode instantiate -C mainchannel -n rawresources -v 0 -c '{\"Args\":[]}' -o orderer0-service:7050 --tls --cafile=/etc/hyperledger/orderers/msp/tlscacerts/ca-root-7054.pem"
+
+8.store
+
+
+docker exec -it cli-peer0-org1 bash 
+
+##use this
+
+peer chaincode invoke -C mainchannel -n rawresources -c '{"Args":["store", "{\"id\":\"1\",\"name\":\"TA\",\"weight\":40,\"age\":20}"]}' -o orderer0-service:7050 --tls --cafile=/etc/hyperledger/orderers/msp/tlscacerts/ca-root-7054.pem
+
+peer chaincode invoke -C mainchannel -n rawresources -c '{"Args":["store", "{\"id\":\"2\",\"name\":\"MUCH\",\"weight\":60,\"age\":20}"]}' -o orderer0-service:7050 --tls --cafile=/etc/hyperledger/orderers/msp/tlscacerts/ca-root-7054.pem
+
+peer chaincode invoke -C mainchannel -n rawresources -c '{"Args":["store", "{\"id\":\"3\",\"name\":\"A.AKE\",\"weight\":60,\"age\":34}"]}' -o orderer0-service:7050 --tls --cafile=/etc/hyperledger/orderers/msp/tlscacerts/ca-root-7054.pem
+
+docker exec cli-peer0-org1 bash -c "peer chaincode query -C mainchannel -n rawresources -c '{\"Args\":[\"index\",\"\",\"\"]}' -o orderer0-service:7050 --tls --cafile=/etc/hyperledger/orderers/msp/tlscacerts/ca-root-7054.pem"
+
+
+
+
+
+peer chaincode invoke -C mainchannel -n rawresources -c '{"Args":["store", "{\"id\":2,\"name\":\"MUCHU\",\"weight\":80,\"age\":22}"]}' -o orderer0-service:7050 --tls --cafile=/etc/hyperledger/orderers/msp/tlscacerts/ca-root-7054.pem
+
+peer chaincode invoke -C mainchannel -n rawresources -c '{"Args":["store", "{\"id\":6,\"name\":\"MUCHU\",\"weight\":80}"]}' -o orderer0-service:7050 --tls --cafile=/etc/hyperledger/orderers/msp/tlscacerts/ca-root-7054.pem
+
+peer chaincode invoke -C mainchannel -n rawresources -c '{"Args":["store", "{\"id\":\"3\",\"name\":\"A.AKE\",\"weight\":70,\"age\":40}"]}' -o orderer0-service:7050 --tls --cafile=/etc/hyperledger/orderers/msp/tlscacerts/ca-root-7054.pem
+
+peer chaincode invoke -C mainchannel -n rawresources -c '{"Args":["store", "{\"id\":\"2\",\"name\":\"Iron Ore\",\"weight\":20000}"]}' -o orderer0-service:7050 --tls --cafile=/etc/hyperledger/orderers/msp/tlscacerts/ca-root-7054.pem
+
+peer chaincode invoke -C mainchannel -n rawresources -c '{"Args":["store", "{\"id\":\"3\",\"name\":\"Iron Ore\",\"weight\":10000}"]}' -o orderer0-service:7050 --tls --cafile=/etc/hyperledger/orderers/msp/tlscacerts/ca-root-7054.pem
+
+docker exec cli-peer0-org1 bash -c "peer chaincode query -C mainchannel -n rawresources -c '{\"Args\":[\"index\",\"\",\"\"]}' -o orderer0-service:7050 --tls --cafile=/etc/hyperledger/orderers/msp/tlscacerts/ca-root-7054.pem"
+
+
+
+peer chaincode invoke -C mainchannel -n rawresources -c '{"name":"MUCHU","weight":80,"age":22}' -o orderer0-service:7050 --tls --cafile=/etc/hyperledger/orderers/msp/tlscacerts/ca-root-7054.pem
+
+{"attrs":{"hf.Affiliation":"org1","hf.EnrollmentID":"org1NodeAdmin","hf.Type":"user"}}
+{"attrs":{"hf.Affiliation":"org1","hf.EnrollmentID":"User1@org1","hf.Type":"user"}}
+
+docker exec cli-peer0-org1 bash -c 'peer chaincode install -p rawresources -n rawresources -v 1' 
+docker exec cli-peer1-org1 bash -c 'peer chaincode install -p rawresources -n rawresources -v 1' 
+docker exec cli-peer0-org2 bash -c 'peer chaincode install -p rawresources -n rawresources -v 1' 
+docker exec cli-peer1-org2 bash -c 'peer chaincode install -p rawresources -n rawresources -v 1'
+
+docker cp ./chaincode/rawresources cli-peer0-org1:/opt/gopath/src/rawresources
+
+docker exec cli-peer0-org1 bash -c "peer chaincode upgrade -C mychannel -n rawresources -v 1 -c '{\"Args\":[]}' -o orderer0-service:7050 --cafile=/etc/hyperledger/orderers/msp/tlscacerts/ca-root-7054.pem
+
+
+
+docker exec cli-peer0-org1 -l node bash -c 'peer chaincode install -n index -v 0' 
+
+peer chaincode instantiate -l node -n mycc -v 0 -C mainchannel -c '{"args":["init","1","2"]}' -o orderer0-service:7050 --tls --cafile=/etc/hyperledger/orderers/msp/tlscacerts/ca-root-7054.pem
+
+docker exec cli-peer0-org1 bash -c "peer chaincode instantiate -l node -n mycc -v 0 -C mainchannel -c '{"args":["init","1","2"]}' -o orderer0-service:7050 --tls --cafile=/etc/hyperledger/orderers/msp/tlscacerts/ca-root-7054.pem"
+
+peer chaincode instantiate -l node -n mycc -v 0 -C mainchannel -c '{"args":["init","1","2"]}' -o orderer0-service:7050 --tls --cafile=/etc/hyperledger/orderers/msp/tlscacerts/ca-root-7054.pem
+
+
+peer chaincode invoke -n mycc -C mainchannel -c '{"Args":["get","1"]}' -o orderer0-service:7050 --tls --cafile=/etc/hyperledger/orderers/msp/tlscacerts/ca-root-7054.pem
+
+peer chaincode invoke -n mycc -C mainchannel -c '{"Args":["set","1","20"]}' -o orderer0-service:7050 --tls --cafile=/etc/hyperledger/orderers/msp/tlscacerts/ca-root-7054.pem
+
+//fabcar
+
+docker exec -it cli-peer0-org1 bash 
+
+
+//install chaincode
+docker exec cli-peer0-org1  bash -c 'peer chaincode install -l node -n profilecontract -p /opt/gopath/src/nodejs -v 8'
+docker exec cli-peer0-org1 bash -c "peer chaincode upgrade -l node -n profilecontract  -v 8 -C mainchannel -c '{\"Args\":[]}' -o orderer0-service:7050 --tls --cafile=/etc/hyperledger/orderers/msp/tlscacerts/ca-root-7054.pem"
+docker exec cli-peer1-org1  bash -c 'peer chaincode install -l node -n profilecontract -p /opt/gopath/src/nodejs -v 8'
+docker exec cli-peer0-org2  bash -c 'peer chaincode install -l node -n profilecontract -p /opt/gopath/src/nodejs -v 8'
+docker exec cli-peer1-org2  bash -c 'peer chaincode install -l node -n profilecontract -p /opt/gopath/src/nodejs -v 8'
+docker exec cli-peer0-org3  bash -c 'peer chaincode install -l node -n profilecontract -p /opt/gopath/src/nodejs -v 8'
+docker exec cli-peer1-org3  bash -c 'peer chaincode install -l node -n profilecontract -p /opt/gopath/src/nodejs -v 8'
+
+
+
+//init
+
+docker exec cli-peer0-org1 bash -c "peer chaincode instantiate -l node -n profilecontract -v 0 -C mainchannel -c '{\"Args\":[]}' -o orderer0-service:7050 --tls --cafile=/etc/hyperledger/orderers/msp/tlscacerts/ca-root-7054.pem"
+docker exec cli-peer1-org1 bash -c "peer chaincode instantiate -l node -n profilecontract -v 0 -C mainchannel -c '{\"Args\":[]}' -o orderer0-service:7050 --tls --cafile=/etc/hyperledger/orderers/msp/tlscacerts/ca-root-7054.pem"
+docker exec cli-peer0-org2 bash -c "peer chaincode instantiate -l node -n profilecontract -v 0 -C mainchannel -c '{\"Args\":[]}' -o orderer0-service:7050 --tls --cafile=/etc/hyperledger/orderers/msp/tlscacerts/ca-root-7054.pem"
+docker exec cli-peer1-org2 bash -c "peer chaincode instantiate -l node -n profilecontract -v 0 -C mainchannel -c '{\"Args\":[]}' -o orderer0-service:7050 --tls --cafile=/etc/hyperledger/orderers/msp/tlscacerts/ca-root-7054.pem"
+docker exec cli-peer0-org3 bash -c "peer chaincode instantiate -l node -n profilecontract -v 0 -C mainchannel -c '{\"Args\":[]}' -o orderer0-service:7050 --tls --cafile=/etc/hyperledger/orderers/msp/tlscacerts/ca-root-7054.pem"
+docker exec cli-peer1-org3 bash -c "peer chaincode instantiate -l node -n profilecontract -v 0 -C mainchannel -c '{\"Args\":[]}' -o orderer0-service:7050 --tls --cafile=/etc/hyperledger/orderers/msp/tlscacerts/ca-root-7054.pem"
+
+
+docker exec cli-peer0-org1 bash -c "peer chaincode instantiate -l node -n profilecontract -v 0 -C mainchannel -c '{\"Args\":[]}' -P \"AND('org1.peer','org2.peer','org3.peer')\" -o orderer0-service:7050 --tls --cafile=/etc/hyperledger/orderers/msp/tlscacerts/ca-root-7054.pem"
+
+
+
+//upgrade 
+
+docker exec cli-peer0-org1 bash -c "peer chaincode upgrade -l node -n profilecontract  -v 67 -C mainchannel -c '{\"Args\":[]}' -o orderer0-service:7050 --tls --cafile=/etc/hyperledger/orderers/msp/tlscacerts/ca-root-7054.pem"
+docker exec cli-peer1-org1 bash -c "peer chaincode upgrade -l node -n profilecontract  -v 15 -C mainchannel -c '{\"Args\":[]}' -o orderer0-service:7050 --tls --cafile=/etc/hyperledger/orderers/msp/tlscacerts/ca-root-7054.pem"
+docker exec cli-peer0-org2 bash -c "peer chaincode upgrade -l node -n profilecontract  -v 15 -C mainchannel -c '{\"Args\":[]}' -o orderer0-service:7050 --tls --cafile=/etc/hyperledger/orderers/msp/tlscacerts/ca-root-7054.pem"
+docker exec cli-peer1-org2 bash -c "peer chaincode upgrade -l node -n profilecontract  -v 15 -C mainchannel -c '{\"Args\":[]}' -o orderer0-service:7050 --tls --cafile=/etc/hyperledger/orderers/msp/tlscacerts/ca-root-7054.pem"
+docker exec cli-peer0-org3 bash -c "peer chaincode upgrade -l node -n profilecontract  -v 15 -C mainchannel -c '{\"Args\":[]}' -o orderer0-service:7050 --tls --cafile=/etc/hyperledger/orderers/msp/tlscacerts/ca-root-7054.pem"
+docker exec cli-peer1-org3 bash -c "peer chaincode upgrade -l node -n profilecontract  -v 15 -C mainchannel -c '{\"Args\":[]}' -o orderer0-service:7050 --tls --cafile=/etc/hyperledger/orderers/msp/tlscacerts/ca-root-7054.pem"
+
+docker exec cli-peer0-org1 bash -c "peer chaincode upgrade -l node -n profilecontract  -v 60 -C mainchannel -c '{\"Args\":[]}' -P \"AND('org1.peer','org2.peer','org3.peer')\" -o orderer0-service:7050 --tls --cafile=/etc/hyperledger/orderers/msp/tlscacerts/ca-root-7054.pem"
+docker exec cli-peer1-org1 bash -c "peer chaincode upgrade -l node -n profilecontract  -v 60 -C mainchannel -c '{\"Args\":[]}' -P \"AND('org1.peer','org2.peer','org3.peer')\" -o orderer0-service:7050 --tls --cafile=/etc/hyperledger/orderers/msp/tlscacerts/ca-root-7054.pem"
+docker exec cli-peer0-org2 bash -c "peer chaincode upgrade -l node -n profilecontract  -v 60 -C mainchannel -c '{\"Args\":[]}' -P \"AND('org1.peer','org2.peer','org3.peer')\" -o orderer0-service:7050 --tls --cafile=/etc/hyperledger/orderers/msp/tlscacerts/ca-root-7054.pem"
+docker exec cli-peer1-org2 bash -c "peer chaincode upgrade -l node -n profilecontract  -v 60 -C mainchannel -c '{\"Args\":[]}' -P \"AND('org1.peer','org2.peer','org3.peer')\" -o orderer0-service:7050 --tls --cafile=/etc/hyperledger/orderers/msp/tlscacerts/ca-root-7054.pem"
+docker exec cli-peer0-org3 bash -c "peer chaincode upgrade -l node -n profilecontract  -v 60 -C mainchannel -c '{\"Args\":[]}' -P \"AND('org1.peer','org2.peer','org3.peer')\" -o orderer0-service:7050 --tls --cafile=/etc/hyperledger/orderers/msp/tlscacerts/ca-root-7054.pem"
+docker exec cli-peer1-org3 bash -c "peer chaincode upgrade -l node -n profilecontract  -v 60 -C mainchannel -c '{\"Args\":[]}' -P \"AND('org1.peer','org2.peer','org3.peer')\" -o orderer0-service:7050 --tls --cafile=/etc/hyperledger/orderers/msp/tlscacerts/ca-root-7054.pem"
+
+//invoke 
+
+//addPatient
+docker exec cli-peer0-org3 peer chaincode invoke -n profilecontract -C mainchannel -c '{"Args":["queryAll"]}' -o orderer0-service:7050 --tls --cafile=/etc/hyperledger/orderers/msp/tlscacerts/ca-root-7054.pem
+
+
+
+
+peer chaincode invoke -n profilecontract  -C mainchannel -c '{"function":"addPatient","Args":["{profileId:90,age:50}"]}' -o orderer0-service:7050 --tls --cafile=/etc/hyperledger/orderers/msp/tlscacerts/ca-root-7054.pem
+
+//QueryPatient
+
+peer chaincode invoke -n patient2 -C mainchannel -c '{"function":"queryPatient","Args":["P003"]}' -o orderer0-service:7050 --tls --cafile=/etc/hyperledger/orderers/msp/tlscacerts/ca-root-7054.pem
+
+// DeletePatient
+
+peer chaincode invoke -n patients -C mainchannel -c '{"function":"deletePatient","Args":["P003"]}' -o orderer0-service:7050 --tls --cafile=/etc/hyperledger/orderers/msp/tlscacerts/ca-root-7054.pem
+
+//UpdatePatient
+
+
+
+// getValue
+docker exec cli-peer0-org1 bash -c "peer chaincode invoke -n patient -C mainchannel -c '{"Args":["get","1"]}' -o orderer0-service:7050 --tls --cafile=/etc/hyperledger/orderers/msp/tlscacerts/ca-root-7054.pem"
+
+// setValue
+docker exec cli-peer0-org1 bash -c "peer chaincode invoke -n patient -C mainchannel -c '{\"Args\":[\"set\",\"1\",\"20\"]}' -o orderer0-service:7050 --tls --cafile=/etc/hyperledger/orderers/msp/tlscacerts/ca-root-7054.pem"
+
+// storeData
+
+docker exec cli-peer0-org1 bash -c "peer chaincode invoke -n patient -C mainchannel -c '{"Args":["store","{\"02\",\"TA\",\"22\"}"]}' -o orderer0-service:7050 --tls --cafile=/etc/hyperledger/orderers/msp/tlscacerts/ca-root-7054.pem"
+
+'{"Args":["store", "{\"id\":2,\"name\":\"MUCHU\",\"weight\":80,\"age\":22}"]}'
+
+// getData
+docker exec cli-peer0-org1 bash -c "peer chaincode invoke -n patient -C mainchannel -c '{"Args":["get","{\"02"\}"]}' -o orderer0-service:7050 --tls --cafile=/etc/hyperledger/orderers/msp/tlscacerts/ca-root-7054.pem"
+
+
+docker exec cli-peer0-org1  bash -c 'peer chaincode install -l node -n index -p /opt/gopath/src/nodejs -v 0' 
+
+docker exec cli-peer0-org1 bash -c "peer chaincode instantiate -l node -n index -v 0 -C mainchannel -c '{\"function\":\"initLedger\",\"Args\":[]}' -o orderer0-service:7050 --tls --cafile=/etc/hyperledger/orderers/msp/tlscacerts/ca-root-7054.pem"
+
+peer chaincode instantiate -l "node" -n index -v 1 -C mainchannel -c '{"function":"initLedger","Args":[]}' -o orderer0-service:7050 --tls --cafile=/etc/hyperledger/orderers/msp/tlscacerts/ca-root-7054.pem
+
+
+
+

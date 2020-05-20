@@ -1,0 +1,194 @@
+name: "default-svc-cluster-local-network-connection-profile"
+
+version: "1.0"
+
+client:
+
+  organization: org1
+
+  logging:
+    level: info
+  
+  cryptoconfig:
+    path: ../crypto-config
+  
+
+
+channels:
+
+  mainchannel:
+
+    peers:
+      peer0-org1-service:
+        endorsingPeer: true
+        chaincodeQuery: true
+        ledgerQuery: true
+        eventSource: true
+      peer1-org1-service:
+        endorsingPeer: true
+        chaincodeQuery: true
+        ledgerQuery: true
+        eventSource: true
+      peer0-org2-service:
+        endorsingPeer: true
+        chaincodeQuery: true
+        ledgerQuery: true
+        eventSource: true
+      peer1-org2-service:
+        endorsingPeer: true
+        chaincodeQuery: true
+        ledgerQuery: true
+        eventSource: true
+      peer0-org3-service:
+        endorsingPeer: true
+        chaincodeQuery: true
+        ledgerQuery: true
+        eventSource: true
+      peer1-org3-service:
+        endorsingPeer: true
+        chaincodeQuery: true
+        ledgerQuery: true
+        eventSource: true
+
+
+organizations:
+  org1:
+    mspid: org1
+    cryptopath: peerOrganizations/org1/users/Admin@org1/msp
+    peers:
+      - peer0-org1-service
+      - peer1-org1-service
+    certificateAuthorities:
+      - ca-root
+    adminPrivateKey:
+      path: ../crypto-config/peerOrganizations/org1/users/Admin@org1/msp/keystore/a54b709b77d8fec2c86dabcf23f5c19114726baab7b7c31b6d6c8a532df58d73_sk
+  org2:
+    mspid: org2
+    cryptopath: peerOrganizations/org2/users/Admin@org2/msp
+    peers:
+      - peer0-org2-service
+      - peer1-org2-service
+    certificateAuthorities:
+      - ca-root
+    adminPrivateKey:
+      path: ../crypto-config/peerOrganizations/org2/users/Admin@org2/msp/keystore/0608a0c842914164eb31d41bef636c3e818efa38f2184763737af181f65b497b_sk
+  org3:
+    mspid: org3
+    cryptopath: peerOrganizations/org3/users/Admin@org3/msp
+    peers:
+      - peer0-org3-service
+      - peer1-org3-service
+    certificateAuthorities:
+      - ca-root
+    adminPrivateKey:
+      path: ../crypto-config/peerOrganizations/org3/users/Admin@org3/msp/keystore/ef24992827ddd0300c111b89117f57e65527ebce661fd3a888fed74335fdd63d_sk
+
+orderers:
+  _default:
+    grpcOptions:
+      keep-alive-time: 0s
+      keep-alive-timeout: 20s
+      keep-alive-permit: false
+      fail-fast: false
+      allow-insecure: false
+  
+  orderer0-service:
+    url: grpcs://localhost:7050
+    grpcOptions:
+      ssl-target-name-override: orderer0-service
+      grpc-max-send-message-length: 15
+    
+    tlsCACerts:
+      path: ../crypto-config/ordererOrganizations/default.svc.cluster.local/msp/tlscacerts/ca-root-7054.pem
+
+  
+  orderer1-service:
+    url: grpcs://localhost:8050
+    grpcOptions:
+      ssl-target-name-override: orderer1-service
+      grpc-max-send-message-length: 15
+    
+    tlsCACerts:
+      path: ../crypto-config/ordererOrganizations/default.svc.cluster.local/msp/tlscacerts/ca-root-7054.pem
+
+  
+  orderer2-service:
+    url: grpcs://localhost:9050
+    grpcOptions:
+      ssl-target-name-override: orderer2-service
+      grpc-max-send-message-length: 15
+    
+    tlsCACerts:
+      path: ../crypto-config/ordererOrganizations/default.svc.cluster.local/msp/tlscacerts/ca-root-7054.pem
+
+peers:
+
+  _default:
+    grpcOptions:
+      keep-alive-time: 1s
+      keep-alive-timeout: 20s
+      keep-alive-permit: false
+      fail-fast: false
+      allow-insecure: false
+    
+  peer0-org1-service:
+    url: grpcs://admin:adminpw@localhost:7051
+    grpcOptions:
+      ssl-target-name-override: peer0-org1-service
+      grpc.http2.keepalive_time: 15
+    tlsCACerts:
+      path: ../crypto-config/peerOrganizations/org1/msp/tlscacerts/ca-root-7054.pem
+  peer1-org1-service:
+    url: grpcs://admin:adminpw@localhost:8051
+    grpcOptions:
+      ssl-target-name-override: peer1-org1-service
+      grpc.http2.keepalive_time: 15
+    tlsCACerts:
+      path: ../crypto-config/peerOrganizations/org1/msp/tlscacerts/ca-root-7054.pem
+
+  
+  peer0-org2-service:
+    url: grpcs://admin:adminpw@localhost:9051
+    grpcOptions:
+      ssl-target-name-override: peer0-org2-service
+      grpc.http2.keepalive_time: 15
+    
+    tlsCACerts:
+      path: ../crypto-config/peerOrganizations/org2/msp/tlscacerts/ca-root-7054.pem
+
+  peer1-org2-service:
+    url: grpcs://admin:adminpw@localhost:10051
+    grpcOptions:
+      ssl-target-name-override: peer1-org2-service
+      grpc.http2.keepalive_time: 15
+    tlsCACerts:
+      path: ../crypto-config/peerOrganizations/org2/msp/tlscacerts/ca-root-7054.pem
+
+  peer0-org3-service:
+    url: grpcs://admin:adminpw@localhost:11051
+    grpcOptions:
+      ssl-target-name-override: peer0-org3-service
+      grpc.http2.keepalive_time: 15
+    tlsCACerts:
+      path: ../crypto-config/peerOrganizations/org3/msp/tlscacerts/ca-root-7054.pem
+
+  peer1-org3-service:
+    url: grpcs://admin:adminpw@localhost:12051
+    grpcOptions:
+      ssl-target-name-override: peer1-org3-service
+      grpc.http2.keepalive_time: 15
+    tlsCACerts:
+      path: ../crypto-config/peerOrganizations/org3/msp/tlscacerts/ca-root-7054.pem
+      
+certificateAuthorities:
+  ca-root:
+    url: http://admin:adminpw@localhost:7054
+    httpOptions:
+      verify: false
+    tlsCACerts:
+      path: ../crypto-config/peerOrganizations/org1/msp/cacerts/ca.org1-cert.pem
+    registrar:
+      - enrollId: admin
+        enrollSecret: adminpw
+    caName: ca-root
+

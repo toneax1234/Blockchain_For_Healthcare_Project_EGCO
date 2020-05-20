@@ -1,0 +1,12 @@
+{
+    "connection_file": "connection.yaml",
+    "appAdmin": "admin",
+    "appAdminSecret": "adminpw",
+    "orgMSPID": "org1",
+    "caName": "fabric-ca-server",
+    "userName": "admin",
+    "gatewayDiscovery": { "enabled": true, "asLocalhost": true },
+    "smart_contract_name" : "profilecontract",
+    "channel_name" : "mainchannel",
+    "caURL" : "http://admin:adminpw@localhost:7054"
+}
