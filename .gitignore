@@ -1,0 +1,8 @@
+node_modules/
+deploy/
+dist/
+nginx/
+crypto-config/
+orderer/
+state/
+

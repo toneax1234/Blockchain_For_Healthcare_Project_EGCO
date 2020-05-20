@@ -1,0 +1,25 @@
+{
+  "name": "hyperledger-fabric-backend",
+  "version": "1.0.0",
+  "description": "Project",
+  "main": "app.js",
+  "dependencies": {
+    "body-parser": "^1.19.0",
+    "cors": "^2.8.5",
+    "express": "^4.17.1",
+    "fabric-ca-client": "^1.4.0",
+    "fabric-network": "^1.4.0",
+    "handlebars": "^4.5.3",
+    "js-yaml": "^3.13.1",
+    "morgan": "^1.9.1",
+    "nodemon": "^1.18.9",
+    "sed": "0.0.1",
+    "tar": ">=2.2.2"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC"
+}
