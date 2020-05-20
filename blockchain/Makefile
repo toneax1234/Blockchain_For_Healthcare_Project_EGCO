@@ -12,11 +12,19 @@ clean:
 up :
 	docker exec ca-client bash -c 'cd ./scripts && ./gen-certs.sh'
 	docker cp ca-client:etc/hyperledger/fabric-ca-client/scripts/crypto-config ./crypto-config
+<<<<<<< HEAD
 	../bin/exe/configtxgen -profile OrdererGenesis -channelID syschannel -outputBlock ./orderer/genesis.block 
 	../bin/exe/configtxgen -profile MainChannel -outputCreateChannelTx ./channels/mainchannel.tx -channelID mainchannel 
 	../bin/exe/configtxgen -profile MainChannel -outputAnchorPeersUpdate ./channels/org1-anchors.tx -channelID mainchannel -asOrg org1 
 	../bin/exe/configtxgen -profile MainChannel -outputAnchorPeersUpdate ./channels/org2-anchors.tx -channelID mainchannel -asOrg org2
 	../bin/exe/configtxgen -profile MainChannel -outputAnchorPeersUpdate ./channels/org3-anchors.tx -channelID mainchannel -asOrg org3
+=======
+	../bin/nicks/configtxgen -profile OrdererGenesis -channelID syschannel -outputBlock ./orderer/genesis.block 
+	../bin/nicks/configtxgen -profile MainChannel -outputCreateChannelTx ./channels/mainchannel.tx -channelID mainchannel 
+	../bin/nicks/configtxgen -profile MainChannel -outputAnchorPeersUpdate ./channels/org1-anchors.tx -channelID mainchannel -asOrg org1 
+	../bin/nicks/configtxgen -profile MainChannel -outputAnchorPeersUpdate ./channels/org2-anchors.tx -channelID mainchannel -asOrg org2
+	../bin/nicks/configtxgen -profile MainChannel -outputAnchorPeersUpdate ./channels/org3-anchors.tx -channelID mainchannel -asOrg org3
+>>>>>>> master
 	docker-compose up
 
 join :
