@@ -14,7 +14,7 @@
     "morgan": "^1.9.1",
     "nodemon": "^1.18.9",
     "sed": "0.0.1",
-    "tar": ">=2.2.2"
+    "tar": ">=6.1.9"
   },
   "devDependencies": {},
   "scripts": {
